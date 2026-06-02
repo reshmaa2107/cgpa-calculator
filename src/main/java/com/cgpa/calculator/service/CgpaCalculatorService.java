@@ -4,6 +4,7 @@ import com.cgpa.calculator.dto.*;
 import com.cgpa.calculator.model.*;
 import com.cgpa.calculator.repository.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
@@ -17,6 +18,8 @@ public class CgpaCalculatorService {
     private final SemesterRepository semesterRepository;
     private final CourseRepository courseRepository;
     private final GradeRepository gradeRepository;
+    private final MarksHistoryRepository marksHistoryRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // ── Student ──────────────────────────────────────
 
@@ -30,6 +33,9 @@ public class CgpaCalculatorService {
                 .name(req.getName())
                 .email(req.getEmail())
                 .rollNumber(req.getRollNumber())
+                .college(req.getCollege())
+                .password(passwordEncoder.encode(req.getPassword()))
+                .role(Student.Role.STUDENT)
                 .build();
         return studentRepository.save(student);
     }
@@ -51,6 +57,10 @@ public class CgpaCalculatorService {
         return semesterRepository.save(semester);
     }
 
+    public List<Semester> getSemestersByStudent(UUID studentId) {
+        return semesterRepository.findByStudentIdOrderBySemesterNumberAsc(studentId);
+    }
+
     // ── Course ───────────────────────────────────────
 
     public Course addCourse(UUID semesterId, String name, String code, Integer credits) {
@@ -65,6 +75,10 @@ public class CgpaCalculatorService {
         return courseRepository.save(course);
     }
 
+    public List<Course> getCoursesBySemester(UUID semesterId) {
+        return courseRepository.findBySemesterId(semesterId);
+    }
+
     // ── Grade & GPA calculation ───────────────────────
 
     @Transactional
@@ -72,7 +86,7 @@ public class CgpaCalculatorService {
         Course course = courseRepository.findById(req.getCourseId())
                 .orElseThrow(() -> new NoSuchElementException("Course not found"));
 
-        // upsert: update if grade exists, else create
+        // upsert — update if exists, else create
         Grade grade = gradeRepository.findByCourseId(course.getId())
                 .orElse(Grade.builder().course(course).build());
 
@@ -80,7 +94,19 @@ public class CgpaCalculatorService {
         grade.setGradePoints(req.getGradePoints());
         gradeRepository.save(grade);
 
-        // recalculate and persist semester GPA immediately
+        // save to marks history
+        MarksHistory history = MarksHistory.builder()
+                .student(course.getSemester().getStudent())
+                .semesterNo(course.getSemester().getSemesterNumber())
+                .courseName(course.getCourseName())
+                .courseCode(course.getCourseCode())
+                .creditHours(course.getCreditHours())
+                .letterGrade(req.getLetterGrade())
+                .gradePoints(req.getGradePoints())
+                .build();
+        marksHistoryRepository.save(history);
+
+        // recalculate semester GPA
         recalculateSemesterGpa(course.getSemester().getId());
 
         return grade;
@@ -143,11 +169,10 @@ public class CgpaCalculatorService {
                 .semesters(summaries)
                 .build();
     }
-    public List<Semester> getSemestersByStudent(UUID studentId) {
-        return semesterRepository.findByStudentIdOrderBySemesterNumberAsc(studentId);
-    }
 
-    public List<Course> getCoursesBySemester(UUID semesterId) {
-        return courseRepository.findBySemesterId(semesterId);
+    // ── History ──────────────────────────────────────
+
+    public List<MarksHistory> getHistory(UUID studentId) {
+        return marksHistoryRepository.findByStudentIdOrderByRecordedAtDesc(studentId);
     }
 }

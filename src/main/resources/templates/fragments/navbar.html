@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="navbar">
+    <style>
+        .cgpa-nav {
+          background: #0f0f1a !important;
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+          width: 100%;
+          font-family: 'Segoe UI', sans-serif;
+        }
+        .cgpa-nav .nav-inner {
+          max-width: 1100px;
+          margin: 0 auto;
+          padding: 0 1.5rem;
+          height: 60px;
+          display: flex !important;
+          align-items: center;
+          justify-content: space-between;
+          gap: 1rem;
+        }
+        .cgpa-nav .nav-logo-text {
+          color: white !important;
+          font-size: 1rem;
+          font-weight: 700;
+        }
+        .cgpa-nav .nav-links {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          flex: 1;
+          justify-content: center;
+        }
+        .cgpa-nav .nav-link {
+          color: #94a3b8 !important;
+          text-decoration: none !important;
+          font-size: 0.85rem;
+          font-weight: 500;
+          padding: 6px 14px;
+          border-radius: 8px;
+          border: 1px solid transparent;
+          transition: all 0.15s;
+          white-space: nowrap;
+        }
+        .cgpa-nav .nav-link:hover {
+          color: white !important;
+          background: rgba(255,255,255,0.08) !important;
+          border-color: rgba(255,255,255,0.1) !important;
+        }
+        .cgpa-nav .nav-link.active {
+          color: #c4b5fd !important;
+          background: rgba(167,139,250,0.18) !important;
+          border-color: rgba(167,139,250,0.35) !important;
+        }
+        .cgpa-nav .nav-user {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-shrink: 0;
+        }
+        .cgpa-nav .nav-avatar {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background: #4f46e5;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.78rem;
+          font-weight: 700;
+          color: white !important;
+          flex-shrink: 0;
+        }
+        .cgpa-nav .nav-name {
+          color: #c4b5fd !important;
+          font-size: 0.82rem;
+          font-weight: 500;
+          max-width: 120px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .cgpa-nav .nav-logout {
+          color: #f87171 !important;
+          text-decoration: none !important;
+          font-size: 0.82rem;
+          font-weight: 500;
+          border: 1px solid rgba(248,113,113,0.4);
+          padding: 5px 12px;
+          border-radius: 7px;
+          transition: background 0.15s;
+          white-space: nowrap;
+        }
+        .cgpa-nav .nav-logout:hover {
+          background: rgba(248,113,113,0.12) !important;
+        }
+    </style>
+
+    <nav class="cgpa-nav">
+        <div class="nav-inner">
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                <span style="font-size:1.3rem;">🎓</span>
+                <span class="nav-logo-text">CGPA Calc</span>
+            </div>
+
+            <div class="nav-links">
+                <a th:href="@{/home}"
+                   th:classappend="${currentPage == 'home'} ? ' active' : ''"
+                   class="nav-link">Home</a>
+                <a th:href="@{/calculate-gpa}"
+                   th:classappend="${currentPage == 'gpa'} ? ' active' : ''"
+                   class="nav-link">Calculate GPA</a>
+                <a th:href="@{/calculate-cgpa}"
+                   th:classappend="${currentPage == 'cgpa'} ? ' active' : ''"
+                   class="nav-link">Calculate CGPA</a>
+                <a th:href="@{/history}"
+                   th:classappend="${currentPage == 'history'} ? ' active' : ''"
+                   class="nav-link">History</a>
+                <a th:href="@{/analysis}"
+                   th:classappend="${currentPage == 'analysis'} ? ' active' : ''"
+                   class="nav-link">Analysis</a>
+            </div>
+
+            <div class="nav-user">
+                <div class="nav-avatar"
+                     th:text="${studentName != null ? studentName.substring(0,1).toUpperCase() : 'U'}">U</div>
+                <span class="nav-name" th:text="${studentName}">Student</span>
+                <a th:href="@{/logout}" class="nav-logout">Logout</a>
+            </div>
+        </div>
+    </nav>
+</th:block>
+</body>
+</html>

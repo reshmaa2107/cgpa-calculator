@@ -24,6 +24,18 @@ public class Student {
     @Column(name = "roll_number", nullable = false, unique = true)
     private String rollNumber;
 
+    @Column
+    private String college;
+
+    @JsonIgnore
+    @Column(nullable = false)
+    private String password;
+
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.STUDENT;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -33,7 +45,7 @@ public class Student {
     private List<Semester> semesters = new ArrayList<>();
 
     @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
-    }
+    protected void onCreate() { createdAt = LocalDateTime.now(); }
+
+    public enum Role { STUDENT, ADMIN }
 }

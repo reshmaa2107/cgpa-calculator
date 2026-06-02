@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calculate CGPA — CGPA Calculator</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; color: #1a1a2e; }
+    .container { max-width: 960px; margin: 2rem auto; padding: 0 1.5rem; }
+    .cgpa-banner {
+      background: linear-gradient(135deg, #1a1a2e, #4f46e5);
+      color: white;
+      border-radius: 14px;
+      padding: 1.8rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    .cgpa-banner .label  { font-size: 0.88rem; opacity: 0.75; margin-bottom: 4px; }
+    .cgpa-banner .name   { font-size: 1.3rem; font-weight: 700; }
+    .cgpa-banner .roll   { font-size: 0.85rem; opacity: 0.65; margin-top: 4px; }
+    .cgpa-value .number  { font-size: 3.5rem; font-weight: 700; line-height: 1; text-align: right; }
+    .cgpa-value .sub     { font-size: 0.85rem; opacity: 0.7; text-align: right; margin-top: 4px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .card h2 { font-size: 1rem; font-weight: 600; margin-bottom: 1.1rem; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; margin-bottom: 0.85rem; }
+    .form-group label { font-size: 0.8rem; font-weight: 500; color: #666; }
+    .form-group input,
+    .form-group select {
+      padding: 0.55rem 0.8rem;
+      border: 1.5px solid #dde3ed;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus,
+    .form-group select:focus { border-color: #4f46e5; }
+    .btn {
+      width: 100%;
+      padding: 0.65rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-primary { background: #4f46e5; color: white; }
+    .btn-primary:hover { background: #4338ca; }
+    .alert {
+      padding: 0.6rem 0.85rem;
+      border-radius: 7px;
+      font-size: 0.85rem;
+      margin-bottom: 0.75rem;
+    }
+    .alert-error   { background: #fee2e2; color: #991b1b; }
+    .alert-success { background: #dcfce7; color: #166534; }
+    .semester-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    .semester-table th {
+      text-align: left;
+      padding: 0.6rem 0.8rem;
+      background: #f8faff;
+      color: #555;
+      font-weight: 600;
+      border-bottom: 1.5px solid #eef0f5;
+    }
+    .semester-table td { padding: 0.7rem 0.8rem; border-bottom: 1px solid #f0f2f7; }
+    .semester-table tr:last-child td { border-bottom: none; }
+    .gpa-pill {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.82rem;
+    }
+    .gpa-high { background: #dcfce7; color: #166534; }
+    .gpa-mid  { background: #fef9c3; color: #854d0e; }
+    .gpa-low  { background: #fee2e2; color: #991b1b; }
+    @media (max-width: 680px) { .grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="container">
+
+  <!-- CGPA Banner -->
+  <div class="cgpa-banner">
+    <div>
+      <div class="label">Student</div>
+      <div class="name" id="b-name">Loading...</div>
+      <div class="roll" id="b-roll"></div>
+    </div>
+    <div class="cgpa-value">
+      <div class="number" id="b-cgpa">—</div>
+      <div class="sub">CGPA</div>
+    </div>
+  </div>
+
+  <div class="grid">
+
+    <!-- Add Semester -->
+    <div class="card">
+      <h2>Add semester</h2>
+      <div id="msg-sem"></div>
+      <div class="form-group">
+        <label>Semester number</label>
+        <input type="number" id="sem-num" placeholder="1" min="1"/>
+      </div>
+      <div class="form-group">
+        <label>Academic year</label>
+        <input type="text" id="sem-year" placeholder="2023-24"/>
+      </div>
+      <button class="btn btn-primary" onclick="addSemester()">Add semester</button>
+    </div>
+
+    <!-- Add Course -->
+    <div class="card">
+      <h2>Add course</h2>
+      <div id="msg-course"></div>
+      <div class="form-group">
+        <label>Semester</label>
+        <select id="sem-select">
+          <option value="">— select semester —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Course name</label>
+        <input type="text" id="course-name" placeholder="Mathematics"/>
+      </div>
+      <div class="form-group">
+        <label>Course code</label>
+        <input type="text" id="course-code" placeholder="MA101"/>
+      </div>
+      <div class="form-group">
+        <label>Credit hours</label>
+        <input type="number" id="course-credits" placeholder="4" min="1"/>
+      </div>
+      <button class="btn btn-primary" onclick="addCourse()">Add course</button>
+    </div>
+
+    <!-- Add Grade -->
+    <div class="card">
+      <h2>Add / update grade</h2>
+      <div id="msg-grade"></div>
+      <div class="form-group">
+        <label>Semester</label>
+        <select id="grade-sem-select" onchange="loadCoursesForGrade()">
+          <option value="">— select semester —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Course</label>
+        <select id="course-select">
+          <option value="">— select course —</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Grade</label>
+        <select id="letter-grade">
+          <option value="O">O — Outstanding (10)</option>
+          <option value="A+">A+ — Excellent (9)</option>
+          <option value="A">A — Very good (8)</option>
+          <option value="B+">B+ — Good (7)</option>
+          <option value="B">B — Above average (6)</option>
+          <option value="C">C — Average (5)</option>
+          <option value="F">F — Fail (0)</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="addGrade()">Save grade</button>
+    </div>
+
+    <!-- Semester Summary -->
+    <div class="card">
+      <h2>Semester summary</h2>
+      <table class="semester-table">
+        <thead>
+        <tr>
+          <th>Semester</th>
+          <th>Year</th>
+          <th>Credits</th>
+          <th>GPA</th>
+        </tr>
+        </thead>
+        <tbody id="sem-tbody">
+        <tr>
+          <td colspan="4" style="color:#aaa;padding:1rem 0.8rem;">
+            No semesters yet.
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script th:inline="javascript">
+  const STUDENT_ID = [[${studentId}]];
+  const GRADE_MAP  = { 'O': 10, 'A+': 9, 'A': 8, 'B+': 7, 'B': 6, 'C': 5, 'F': 0 };
+
+  async function loadCgpa() {
+    const res  = await fetch(`/api/students/${STUDENT_ID}/cgpa`);
+    if (!res.ok) return;
+    const data = await res.json();
+
+    document.getElementById('b-name').textContent = data.studentName;
+    document.getElementById('b-roll').textContent = data.rollNumber;
+    document.getElementById('b-cgpa').textContent = data.cgpa != null
+        ? data.cgpa.toFixed(2) : '—';
+
+    const semSelect      = document.getElementById('sem-select');
+    const gradeSemSelect = document.getElementById('grade-sem-select');
+    semSelect.innerHTML      = '<option value="">— select semester —</option>';
+    gradeSemSelect.innerHTML = '<option value="">— select semester —</option>';
+
+    const tbody = document.getElementById('sem-tbody');
+    tbody.innerHTML = '';
+
+    if (!data.semesters || data.semesters.length === 0) {
+      tbody.innerHTML =
+        '<tr><td colspan="4" style="color:#aaa;padding:1rem 0.8rem;">No semesters yet.</td></tr>';
+      return;
+    }
+
+    data.semesters.forEach(s => {
+      const opt1 = new Option(
+        `Semester ${s.semesterNumber} (${s.academicYear ?? ''})`,
+        s.semesterNumber
+      );
+      const opt2 = opt1.cloneNode(true);
+      semSelect.appendChild(opt1);
+      gradeSemSelect.appendChild(opt2);
+
+      const gpa = s.gpa ?? 0;
+      const cls = gpa >= 8 ? 'gpa-high' : gpa >= 6 ? 'gpa-mid' : 'gpa-low';
+      const tr  = document.createElement('tr');
+      tr.innerHTML = `
+        <td>Sem ${s.semesterNumber}</td>
+        <td>${s.academicYear ?? '—'}</td>
+        <td>${s.totalCredits}</td>
+        <td><span class="gpa-pill ${cls}">${gpa.toFixed(2)}</span></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  async function addSemester() {
+    const num  = document.getElementById('sem-num').value;
+    const year = document.getElementById('sem-year').value.trim();
+    const msg  = document.getElementById('msg-sem');
+    if (!num) {
+      msg.innerHTML = '<div class="alert alert-error">Semester number is required.</div>';
+      return;
+    }
+    const res = await fetch(
+      `/api/semesters?studentId=${STUDENT_ID}&semesterNumber=${num}&academicYear=${year}`,
+      { method: 'POST' }
+    );
+    if (res.ok) {
+      msg.innerHTML = '<div class="alert alert-success">Semester added!</div>';
+      document.getElementById('sem-num').value  = '';
+      document.getElementById('sem-year').value = '';
+      loadCgpa();
+    } else {
+      const err = await res.json();
+      msg.innerHTML =
+        `<div class="alert alert-error">${err.error ?? 'Error adding semester.'}</div>`;
+    }
+  }
+
+  async function addCourse() {
+    const semNum  = document.getElementById('sem-select').value;
+    const name    = document.getElementById('course-name').value.trim();
+    const code    = document.getElementById('course-code').value.trim();
+    const credits = document.getElementById('course-credits').value;
+    const msg     = document.getElementById('msg-course');
+
+    if (!semNum || !name || !credits) {
+      msg.innerHTML =
+        '<div class="alert alert-error">Semester, course name and credits are required.</div>';
+      return;
+    }
+
+    const semId = await getSemesterId(semNum);
+    if (!semId) {
+      msg.innerHTML = '<div class="alert alert-error">Semester not found.</div>';
+      return;
+    }
+
+    const res = await fetch(
+      `/api/courses?semesterId=${semId}&courseName=${encodeURIComponent(name)}&courseCode=${encodeURIComponent(code)}&creditHours=${credits}`,
+      { method: 'POST' }
+    );
+    if (res.ok) {
+      msg.innerHTML = '<div class="alert alert-success">Course added!</div>';
+      document.getElementById('course-name').value    = '';
+      document.getElementById('course-code').value    = '';
+      document.getElementById('course-credits').value = '';
+      loadCgpa();
+    } else {
+      const err = await res.json();
+      msg.innerHTML =
+        `<div class="alert alert-error">${err.error ?? 'Error adding course.'}</div>`;
+    }
+  }
+
+  async function getSemesterId(semesterNumber) {
+    const res  = await fetch(`/api/semesters/student/${STUDENT_ID}`);
+    if (!res.ok) return null;
+    const list = await res.json();
+    const found = list.find(s => s.semesterNumber == semesterNumber);
+    return found?.id ?? null;
+  }
+
+  async function loadCoursesForGrade() {
+    const semNum = document.getElementById('grade-sem-select').value;
+    const select = document.getElementById('course-select');
+    select.innerHTML = '<option value="">— select course —</option>';
+    if (!semNum) return;
+
+    const semId = await getSemesterId(semNum);
+    if (!semId) return;
+
+    const res = await fetch(`/api/courses/semester/${semId}`);
+    if (!res.ok) return;
+    const courses = await res.json();
+    courses.forEach(c => {
+      select.appendChild(
+        new Option(`${c.courseName} (${c.creditHours} cr)`, c.id)
+      );
+    });
+  }
+
+  async function addGrade() {
+    const courseId    = document.getElementById('course-select').value;
+    const letterGrade = document.getElementById('letter-grade').value;
+    const gradePoints = GRADE_MAP[letterGrade];
+    const msg         = document.getElementById('msg-grade');
+
+    if (!courseId) {
+      msg.innerHTML = '<div class="alert alert-error">Please select a course.</div>';
+      return;
+    }
+
+    const res = await fetch('/api/grades', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ courseId, letterGrade, gradePoints })
+    });
+
+    if (res.ok) {
+      msg.innerHTML =
+        '<div class="alert alert-success">Grade saved! CGPA updated.</div>';
+      loadCgpa();
+    } else {
+      const err = await res.json();
+      msg.innerHTML =
+        `<div class="alert alert-error">${err.error ?? 'Error saving grade.'}</div>`;
+    }
+  }
+
+  loadCgpa();
+</script>
+</body>
+</html>

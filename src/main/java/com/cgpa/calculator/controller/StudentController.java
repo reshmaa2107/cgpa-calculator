@@ -30,4 +30,10 @@ public class StudentController {
     public ResponseEntity<CgpaResponse> getCgpa(@PathVariable UUID id) {
         return ResponseEntity.ok(service.getCgpa(id));
     }
+
+    @PostMapping("/register")
+    public ResponseEntity<Student> register(@Valid @RequestBody StudentRequest req) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.createStudent(req));
+    }
+
 }

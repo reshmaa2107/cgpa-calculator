@@ -14,4 +14,10 @@ public class StudentRequest {
 
     @NotBlank(message = "Roll number is required")
     private String rollNumber;
+
+    private String college;
+
+    @NotBlank(message = "Password is required")
+    @Size(min = 6, message = "Password must be at least 6 characters")
+    private String password;
 }

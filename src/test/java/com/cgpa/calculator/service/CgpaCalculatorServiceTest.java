@@ -30,7 +30,7 @@ class CgpaCalculatorServiceTest {
     @Test
     @DisplayName("createStudent: saves and returns student")
     void createStudent_success() {
-        StudentRequest req = new StudentRequest("Arjun", "arjun@test.com", "CS001");
+        StudentRequest req = new StudentRequest("Arjun", "arjun@test.com", "CS001", "Anna University", "password123");
 
         when(studentRepository.existsByEmail("arjun@test.com")).thenReturn(false);
         when(studentRepository.existsByRollNumber("CS001")).thenReturn(false);
@@ -46,7 +46,7 @@ class CgpaCalculatorServiceTest {
     @Test
     @DisplayName("createStudent: throws when email already exists")
     void createStudent_duplicateEmail_throws() {
-        StudentRequest req = new StudentRequest("Arjun", "arjun@test.com", "CS001");
+        StudentRequest req = new StudentRequest("Arjun", "arjun@test.com", "CS001", "Anna University", "password123");
         when(studentRepository.existsByEmail("arjun@test.com")).thenReturn(true);
 
         assertThatThrownBy(() -> service.createStudent(req))
@@ -59,7 +59,7 @@ class CgpaCalculatorServiceTest {
     @Test
     @DisplayName("createStudent: throws when roll number already exists")
     void createStudent_duplicateRoll_throws() {
-        StudentRequest req = new StudentRequest("Arjun", "arjun@test.com", "CS001");
+        StudentRequest req = new StudentRequest("Arjun", "arjun@test.com", "CS001", "Anna University", "password123");
         when(studentRepository.existsByEmail(any())).thenReturn(false);
         when(studentRepository.existsByRollNumber("CS001")).thenReturn(true);
 

@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Analysis — CGPA Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:#1a1a2e}
+        .container{max-width:900px;margin:2rem auto;padding:0 1.5rem}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem}
+        .card{background:white;border-radius:12px;padding:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+        .card h2{font-size:1rem;font-weight:600;margin-bottom:1rem}
+        .metric{text-align:center;padding:1rem}
+        .metric .num{font-size:2.5rem;font-weight:700;color:#4f46e5}
+        .metric .label{font-size:0.85rem;color:#777;margin-top:4px}
+        .feedback{background:#eef2ff;border-radius:8px;padding:1rem;font-size:0.9rem;line-height:1.6;color:#3730a3}
+        .feedback strong{display:block;margin-bottom:6px}
+        @media(max-width:600px){.grid{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+<div class="container">
+
+    <div class="grid">
+        <div class="card metric">
+            <div class="num" id="cgpa-val">—</div>
+            <div class="label">Overall CGPA</div>
+        </div>
+        <div class="card metric">
+            <div class="num" id="best-sem">—</div>
+            <div class="label">Best semester GPA</div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-bottom:1.5rem">
+        <h2>GPA trend across semesters</h2>
+        <canvas id="gpa-chart" height="100"></canvas>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h2>Best performing subjects</h2>
+            <div id="best-subjects"></div>
+        </div>
+        <div class="card">
+            <h2>Subjects needing improvement</h2>
+            <div id="weak-subjects"></div>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top:1.5rem">
+        <h2>Performance feedback</h2>
+        <div class="feedback" id="feedback">Loading...</div>
+    </div>
+
+</div>
+<script th:inline="javascript">
+    const STUDENT_ID = [[${studentId}]];
+
+    async function loadAnalysis() {
+      const [cgpaRes, histRes] = await Promise.all([
+        fetch(`/api/students/${STUDENT_ID}/cgpa`),
+        fetch(`/api/history/${STUDENT_ID}`)
+      ]);
+      const cgpaData = await cgpaRes.json();
+      const history  = await histRes.json();
+
+      const cgpa = cgpaData.cgpa ?? 0;
+      document.getElementById('cgpa-val').textContent = cgpa.toFixed(2);
+
+      const semesters = cgpaData.semesters ?? [];
+      const bestGpa = semesters.length > 0 ? Math.max(...semesters.map(s => s.gpa ?? 0)).toFixed(2) : '—';
+      document.getElementById('best-sem').textContent = bestGpa;
+
+      // GPA trend chart
+      if (semesters.length > 0) {
+        new Chart(document.getElementById('gpa-chart'), {
+          type: 'line',
+          data: {
+            labels: semesters.map(s => 'Sem ' + s.semesterNumber),
+            datasets: [{
+              label: 'GPA',
+              data: semesters.map(s => s.gpa ?? 0),
+              borderColor: '#4f46e5',
+              backgroundColor: 'rgba(79,70,229,0.1)',
+              borderWidth: 2,
+              pointBackgroundColor: '#4f46e5',
+              tension: 0.3,
+              fill: true
+            }]
+          },
+          options: {
+            scales: { y: { min: 0, max: 10 } },
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+
+      // Best and weak subjects from history
+      const subjectMap = {};
+      history.forEach(h => {
+        if (!subjectMap[h.courseName]) subjectMap[h.courseName] = [];
+        subjectMap[h.courseName].push(h.gradePoints);
+      });
+      const avgBySubject = Object.entries(subjectMap).map(([name, pts]) => ({
+        name, avg: pts.reduce((a,b) => a+b, 0) / pts.length
+      })).sort((a,b) => b.avg - a.avg);
+
+      const best = avgBySubject.slice(0,3);
+      const weak = [...avgBySubject].reverse().slice(0,3).filter(s => s.avg < 7);
+
+      document.getElementById('best-subjects').innerHTML = best.length
+        ? best.map(s => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f2f7;font-size:0.88rem"><span>${s.name}</span><span style="color:#166534;font-weight:600">${s.avg.toFixed(1)}</span></div>`).join('')
+        : '<p style="color:#aaa;font-size:0.88rem">No data yet.</p>';
+
+      document.getElementById('weak-subjects').innerHTML = weak.length
+        ? weak.map(s => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f2f7;font-size:0.88rem"><span>${s.name}</span><span style="color:#991b1b;font-weight:600">${s.avg.toFixed(1)}</span></div>`).join('')
+        : '<p style="color:#166534;font-size:0.88rem">No weak subjects. Keep it up!</p>';
+
+      // Feedback
+      let fb = '';
+      if (cgpa >= 9)      fb = '<strong>Outstanding performance! 🌟</strong> Your CGPA of ' + cgpa.toFixed(2) + ' is excellent. You are in the top tier of academic achievers. Keep maintaining this consistency.';
+      else if (cgpa >= 8) fb = '<strong>Excellent work! 🎉</strong> Your CGPA of ' + cgpa.toFixed(2) + ' reflects strong academic performance. Focus on your weaker subjects to push towards a 9+ CGPA.';
+      else if (cgpa >= 7) fb = '<strong>Good performance! 👍</strong> Your CGPA of ' + cgpa.toFixed(2) + ' is solid. Identify subjects where you scored below 7 and dedicate extra time to improve them.';
+      else if (cgpa >= 6) fb = '<strong>Average performance. 📚</strong> Your CGPA of ' + cgpa.toFixed(2) + ' shows you are passing but there is significant room for improvement. Create a consistent study schedule.';
+      else if (cgpa > 0)  fb = '<strong>Needs improvement. 💪</strong> Your CGPA of ' + cgpa.toFixed(2) + ' indicates challenges in your studies. Consider speaking to your academic advisor for guidance.';
+      else                fb = '<strong>No data yet.</strong> Add your grades to see performance analysis.';
+      document.getElementById('feedback').innerHTML = fb;
+    }
+    loadAnalysis();
+</script>
+</body>
+</html>

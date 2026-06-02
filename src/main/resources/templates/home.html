@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Home — CGPA Calculator</title>
+    <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:#1a1a2e}
+        .container{max-width:900px;margin:2rem auto;padding:0 1.5rem}
+        .welcome{background:#1a1a2e;color:white;border-radius:14px;padding:2rem;margin-bottom:2rem}
+        .welcome h2{font-size:1.4rem;margin-bottom:6px}
+        .welcome p{color:#a5b4fc;font-size:0.9rem}
+        .grid{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:2rem}
+        .card{background:white;border-radius:12px;padding:1.5rem;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+        .card h3{font-size:1rem;font-weight:600;margin-bottom:0.75rem;color:#1a1a2e}
+        .card p{font-size:0.88rem;color:#555;line-height:1.6}
+        .formula{background:#eef2ff;border-radius:8px;padding:0.75rem 1rem;font-family:monospace;font-size:0.9rem;color:#4338ca;margin-top:0.75rem}
+        .grade-table{width:100%;border-collapse:collapse;font-size:0.85rem;margin-top:0.75rem}
+        .grade-table th{background:#f8faff;padding:0.5rem;text-align:left;font-weight:600;color:#555;border-bottom:1.5px solid #eef0f5}
+        .grade-table td{padding:0.5rem;border-bottom:1px solid #f0f2f7}
+        .btn-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:2rem}
+        .btn{padding:1rem;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;transition:transform 0.1s}
+        .btn:active{transform:scale(0.98)}
+        .btn-gpa{background:#4f46e5;color:white}
+        .btn-gpa:hover{background:#4338ca}
+        .btn-cgpa{background:#0f6e56;color:white}
+        .btn-cgpa:hover{background:#085041}
+        @media(max-width:600px){.grid{grid-template-columns:1fr}.btn-row{grid-template-columns:1fr}}
+    </style>
+</head>
+<body>
+<div th:replace="~{fragments/navbar :: navbar}"></div>
+
+<div class="container">
+    <div class="welcome">
+        <h2>Welcome back, <span th:text="${studentName}">Student</span> 👋</h2>
+        <p th:text="${college != null ? college : 'CGPA Calculator'}"></p>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3>What is GPA?</h3>
+            <p>Grade Point Average (GPA) is the average of grade points earned in all courses within a single semester, weighted by credit hours.</p>
+            <div class="formula">GPA = Σ(grade points × credits) / Σ(credits)</div>
+        </div>
+        <div class="card">
+            <h3>What is CGPA?</h3>
+            <p>Cumulative GPA (CGPA) is the overall average of all semester GPAs throughout your academic program. It reflects your overall academic performance.</p>
+            <div class="formula">CGPA = Σ(all semester GPAs) / number of semesters</div>
+        </div>
+        <div class="card" style="grid-column:span 2">
+            <h3>Grade scale (10-point system)</h3>
+            <table class="grade-table">
+                <thead><tr><th>Grade</th><th>Points</th><th>Range</th><th>Description</th></tr></thead>
+                <tbody>
+                <tr><td>O</td><td>10</td><td>91–100</td><td>Outstanding</td></tr>
+                <tr><td>A+</td><td>9</td><td>81–90</td><td>Excellent</td></tr>
+                <tr><td>A</td><td>8</td><td>71–80</td><td>Very good</td></tr>
+                <tr><td>B+</td><td>7</td><td>61–70</td><td>Good</td></tr>
+                <tr><td>B</td><td>6</td><td>51–60</td><td>Above average</td></tr>
+                <tr><td>C</td><td>5</td><td>45–50</td><td>Average</td></tr>
+                <tr><td>F</td><td>0</td><td>Below 45</td><td>Fail</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="btn-row">
+        <button class="btn btn-gpa" onclick="window.location.href='/calculate-gpa'">📊 Calculate GPA</button>
+        <button class="btn btn-cgpa" onclick="window.location.href='/calculate-cgpa'">🎯 Calculate CGPA</button>
+    </div>
+</div>
+</body>
+</html>

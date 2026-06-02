@@ -50,7 +50,7 @@ class StudentControllerTest {
     @Test
     @DisplayName("POST /api/students: creates student and returns 201")
     void createStudent_returns201() {
-        StudentRequest req = new StudentRequest("Arjun Kumar", "arjun@test.com", "CS001");
+        StudentRequest req = new StudentRequest("Arjun Kumar", "arjun@test.com", "CS001", "Anna University", "password123");
         when(service.createStudent(any())).thenReturn(mockStudent);
 
         ResponseEntity<Student> res = client.post()
