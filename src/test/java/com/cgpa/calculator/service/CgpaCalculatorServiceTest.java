@@ -8,6 +8,7 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.*;
 
@@ -22,10 +23,10 @@ class CgpaCalculatorServiceTest {
     @Mock SemesterRepository semesterRepository;
     @Mock CourseRepository courseRepository;
     @Mock GradeRepository gradeRepository;
+    @Mock PasswordEncoder passwordEncoder;
+    @Mock MarksHistoryRepository marksHistoryRepository;
 
     @InjectMocks CgpaCalculatorService service;
-
-    // ── Student tests ────────────────────────────────
 
     @Test
     @DisplayName("createStudent: saves and returns student")
@@ -34,6 +35,7 @@ class CgpaCalculatorServiceTest {
 
         when(studentRepository.existsByEmail("arjun@test.com")).thenReturn(false);
         when(studentRepository.existsByRollNumber("CS001")).thenReturn(false);
+        when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
         when(studentRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
         Student result = service.createStudent(req);
@@ -79,8 +81,6 @@ class CgpaCalculatorServiceTest {
                 .hasMessageContaining("Student not found");
     }
 
-    // ── GPA calculation tests ────────────────────────
-
     @Test
     @DisplayName("recalculateSemesterGpa: weighted average is correct")
     void recalculateSemesterGpa_correct() {
@@ -93,9 +93,8 @@ class CgpaCalculatorServiceTest {
         Course c2 = Course.builder().id(UUID.randomUUID())
                 .courseName("Physics").creditHours(3).semester(semester).build();
 
-        Grade g1 = Grade.builder().gradePoints(9.0).build();  // 9 × 4 = 36
-        Grade g2 = Grade.builder().gradePoints(8.0).build();  // 8 × 3 = 24
-        // expected GPA = (36 + 24) / (4 + 3) = 60 / 7 = 8.57
+        Grade g1 = Grade.builder().gradePoints(9.0).build();
+        Grade g2 = Grade.builder().gradePoints(8.0).build();
 
         when(semesterRepository.findById(semId)).thenReturn(Optional.of(semester));
         when(courseRepository.findBySemesterId(semId)).thenReturn(List.of(c1, c2));
@@ -145,6 +144,7 @@ class CgpaCalculatorServiceTest {
         when(courseRepository.findById(courseId)).thenReturn(Optional.of(course));
         when(gradeRepository.findByCourseId(courseId)).thenReturn(Optional.empty());
         when(gradeRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(marksHistoryRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         when(semesterRepository.findById(semId)).thenReturn(Optional.of(semester));
         when(courseRepository.findBySemesterId(semId)).thenReturn(List.of(course));
         when(gradeRepository.findByCourseId(courseId)).thenReturn(
