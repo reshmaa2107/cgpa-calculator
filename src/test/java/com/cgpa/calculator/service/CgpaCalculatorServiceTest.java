@@ -32,7 +32,6 @@ class CgpaCalculatorServiceTest {
     @DisplayName("createStudent: saves and returns student")
     void createStudent_success() {
         StudentRequest req = new StudentRequest("Arjun", "arjun@test.com", "CS001", "Anna University", "password123");
-
         when(studentRepository.existsByEmail("arjun@test.com")).thenReturn(false);
         when(studentRepository.existsByRollNumber("CS001")).thenReturn(false);
         when(passwordEncoder.encode(any())).thenReturn("encodedPassword");
@@ -85,8 +84,7 @@ class CgpaCalculatorServiceTest {
     @DisplayName("recalculateSemesterGpa: weighted average is correct")
     void recalculateSemesterGpa_correct() {
         UUID semId = UUID.randomUUID();
-        Semester semester = Semester.builder()
-                .id(semId).semesterNumber(1).build();
+        Semester semester = Semester.builder().id(semId).semesterNumber(1).build();
 
         Course c1 = Course.builder().id(UUID.randomUUID())
                 .courseName("Maths").creditHours(4).semester(semester).build();
@@ -133,7 +131,7 @@ class CgpaCalculatorServiceTest {
     @DisplayName("addOrUpdateGrade: upserts grade and triggers GPA recalculation")
     void addOrUpdateGrade_triggersRecalculation() {
         UUID courseId = UUID.randomUUID();
-        UUID semId    = UUID.randomUUID();
+        UUID semId = UUID.randomUUID();
 
         Semester semester = Semester.builder().id(semId).build();
         Course course = Course.builder()
